@@ -35,6 +35,7 @@ library
                      , lens
                      , jsaddle
                      , ghcjs-dom == 0.9.*
+                     -- , ghcjs-dom-jsaddle
                      , time
                      , random
                      , containers == 0.5.*

@@ -31,7 +31,6 @@ module Reflex.Dom.CanvasDyn
   , nextFrameWithCxFree
  ) where
 
-import           Control.Lens                   ((^.))
 import           Data.Coerce                    (coerce)
 import           Data.Proxy                     (Proxy (..))
 import           GHC.TypeLits                   (KnownSymbol, symbolVal)
@@ -62,12 +61,12 @@ dCanvasCx
   -> m (Dynamic t (CanvasInfo c t))
 dCanvasCx cfg = do
   let
-    reflexEl = cfg ^. canvasConfig_El
+    reflexEl = _canvasConfig_El cfg
     cxType   = symbolVal (Proxy :: Proxy (RenderContextEnum c))
 
   renderCx <- liftJSM $ do
     e  <- fromJSValUnchecked =<< toJSVal (RD._element_raw reflexEl)
-    getContextUnchecked e cxType (cfg ^. canvasConfig_Args)
+    getContextUnchecked e cxType (_canvasConfig_Args cfg)
 
   return . pure $ CanvasInfo reflexEl ( coerce renderCx) (`RD.keypress` reflexEl)
 

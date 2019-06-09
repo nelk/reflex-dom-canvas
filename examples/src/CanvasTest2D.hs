@@ -64,7 +64,7 @@ eDraw aTime stdGen = do
   canvasEl <- fst <$> RD.elAttr' "canvas" canvasAttrs RD.blank
 
   -- Create our canvas painter, will be restricted to 'context2d' because of the types! :D
-  d2D <- fmap (^. Canvas.canvasInfo_context)
+  d2D <- fmap Canvas._canvasInfo_context
     <$> CDyn.dContext2d ( Canvas.CanvasConfig canvasEl [] )
 
   eTick <- RD.tickLossy 0.016 aTime
@@ -88,7 +88,7 @@ eDraw aTime stdGen = do
       CanvasF.strokeStyleF "#000000"
       CanvasF.strokeF
 
-    dLines = ( ^. AF.dataSet_lines . to toCM )
+    dLines = (\dl -> toCM $ AF._dataSet_lines dl )
       <$> dDataLines
 
   _ <- CDyn.nextFrameWithCxFree dLines d2D eTicken

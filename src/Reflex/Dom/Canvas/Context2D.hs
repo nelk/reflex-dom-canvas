@@ -62,6 +62,9 @@ data CanvasF a
   | ClearRect Float Float Float Float a
   | StrokeRect Float Float Float Float a
 
+  | Font JSString a
+  | FillText JSString Float Float (Maybe Float) a
+
   | Done a
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
@@ -116,14 +119,12 @@ applyInstruction cxt instruction =
   --  TextAlign C.TextAlign a
   --  TextBaseline C.TextBaseline a
   --  LineWidth Double a
-  --  Font JSString a
+    Font font cont -> cont <$ C.setFont cxt font
   --  MeasureText JSString (Double -> a)
-  --  FillText JSString Double Double a
+    FillText text x y maybeMaxWidth cont -> cont <$ C.fillText cxt text x y maybeMaxWidth
   --  StrokeText JSString Double Double a
   --  DrawImage CanvasImageSource Float Float a
 
-    --  FillText text x y cont                                -> cont <$ C.fillText text x y
-    --  Font font' cont                                       -> cont <$ C.font font'
     --  GlobalAlpha value cont                                -> cont <$ C.globalAlpha value
     --  LineCap linecap cont                                  -> cont <$ C.lineCap linecap
     --  LineDashOffset offset cont                            -> cont <$ C.lineDashOffset offset
@@ -190,3 +191,10 @@ arcF x y radius startAngle endAngle anticlockwise = liftF $ Arc x y radius start
 
 arcToF :: Double -> Double -> Double -> Double -> Double -> CanvasM ()
 arcToF cp1_X cp1_Y cp2_X cp2_Y radius = liftF $ ArcTo cp1_X cp1_Y cp2_X cp2_Y radius ()
+
+fontF :: JSString -> CanvasM ()
+fontF font = liftF $ Font font ()
+
+fillTextF :: JSString -> Float -> Float -> Maybe Float -> CanvasM ()
+fillTextF text x y maybeMaxWidth = liftF $ FillText text x y maybeMaxWidth ()
+

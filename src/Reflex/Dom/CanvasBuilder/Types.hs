@@ -9,8 +9,6 @@
 -- | Core types, typeclasses, and structures for handling the canvas contexts.
 module Reflex.Dom.CanvasBuilder.Types where
 
-import           Control.Lens                       (makeLenses)
-
 import           GHC.TypeLits                       (Symbol)
 
 import qualified Reflex                             as R
@@ -45,7 +43,7 @@ type instance RenderContext 'Webgl = WebGLRenderingContext
 -- you are requesting and the stringly input to the JavaScript function.
 type family RenderContextEnum (a :: ContextType) :: Symbol
 type instance RenderContextEnum 'TwoD  = "2d"
-type instance RenderContextEnum 'Webgl = "webgl"
+type instance RenderContextEnum 'Webgl = "experimental-webgl" -- DO NOT SUBMIT
 
 -- | Type family to connect a ContextType to the Free instructions for working
 -- with a particular type of context. So you cannot run 2d drawing actions when
@@ -59,7 +57,6 @@ data CanvasConfig (c :: ContextType) t = CanvasConfig
   { _canvasConfig_El   :: RD.El t -- ^ The \<canvas\> element that will be used to extract the context object.
   , _canvasConfig_Args :: [Text]  -- ^ Any additional arguments to be used when calling the context function.
   }
-makeLenses ''CanvasConfig
 
 -- | Contains the context, a key press event function, as well as the raw
 -- \<canvas\> element.
@@ -68,7 +65,6 @@ data CanvasInfo (c :: ContextType) t = CanvasInfo
   , _canvasInfo_context  :: RenderContext c
   , _canvasInfo_keyEvent :: RD.Key -> R.Event t ()
   }
-makeLenses ''CanvasInfo
 
 -- | Lawless typeclass to allow for overloading of the render function when
 -- drawing instructions from the Free monad.

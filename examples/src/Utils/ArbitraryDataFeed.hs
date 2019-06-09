@@ -54,7 +54,7 @@ keepFixedSeq limit n s
 
 data Point = Point Float Float
   deriving (Show)
-makePrisms ''Point
+-- makePrisms ''Point
 
 data Line = Line
   { _line_start       :: Point
@@ -62,7 +62,7 @@ data Line = Line
   , _line_strokeStyle :: Text
   }
   deriving (Show)
-makeLenses ''Line
+-- makeLenses ''Line
 
 data DataSet = DataSet
   { _dataSet_max   :: Float
@@ -70,7 +70,7 @@ data DataSet = DataSet
   , _dataSet_lines :: Seq Line
   }
   deriving (Show)
-makeLenses ''DataSet
+-- makeLenses ''DataSet
 
 lineInstruction
   :: Line
@@ -81,10 +81,12 @@ lineInstruction line = do
     sigh = over both ( fromRational . toRational )
 
     f l g =
-      uncurry g (line ^. l . _Point . to sigh)
+      let (Point x y) = l line
+          (x', y') = sigh (x, y)
+      in uncurry g (x', y')
 
-  f line_start CanvasF.moveToF
-  f line_end CanvasF.lineToF
+  f _line_start CanvasF.moveToF
+  f _line_end CanvasF.lineToF
 
 zeroLine
   :: Line
@@ -98,6 +100,9 @@ emptyDataSet
   :: DataSet
 emptyDataSet = DataSet 0.0 0.0
   ( S.singleton zeroLine )
+
+pX (Point x _) = x
+pY (Point _ y) = y
 
 dDataz
   :: ( Reflex t
@@ -115,21 +120,21 @@ dDataz _ w limit eNewDataPoint =
   in
     R.foldDyn
     (\n ds -> ds
-      & dataSet_max %~ max n
-      & dataSet_min %~ min n
-      & dataSet_lines . traverse %~
-      ( ( line_end . _Point . _1 +~ stepToTheRight )
-      . ( line_start . _Point . _1 +~ stepToTheRight )
-      )
-      & dataSet_lines %~ (\xs -> addNewDataPoint n xs $ uncons xs)
+      { _dataSet_max = max n $ _dataSet_max ds
+      , _dataSet_min = min n $ _dataSet_min ds
+      , _dataSet_lines = (\xs -> addNewDataPoint n xs $ uncons xs) $ fmap (\l ->
+        l { _line_end = Point (pX (_line_end l) + stepToTheRight) (pY $ _line_end l)
+        , _line_start = Point (pX (_line_start l) + stepToTheRight) (pY $ _line_start l)
+        }) $ _dataSet_lines ds
+      }
     )
     emptyDataSet
     eNewDataPoint
   where
     newLine p l = l
-      & line_end .~ (l ^. line_start)
-      & line_start . _Point . _2 .~ p
-      & line_start . _Point . _1 .~ 0.0
+      { _line_end = _line_start l
+      , _line_start = Point 0 p
+      }
 
     addNewDataPoint n s  Nothing       = keepFixedSeq limit (newLine n zeroLine) s
     addNewDataPoint n _ (Just (h', t)) = keepFixedSeq limit (newLine n h') (cons h' t)

@@ -7,8 +7,6 @@
 --
 module CanvasTest3D where
 
-import           Control.Lens                        ((^.))
-
 import qualified Reflex.Dom.Canvas.WebGL             as Gl
 
 import           GHCJS.DOM.Types                     (JSString, MonadJSM)
@@ -157,7 +155,7 @@ eDraw _aTime = do
   canvasEl <- fst <$> RD.elDynAttr' "canvas"
     (Map.insert "id" canvasId <$> canvasAttrs) RD.blank
 
-  dGLCX <- fmap (^. Canvas.canvasInfo_context)
+  dGLCX <- fmap Canvas._canvasInfo_context
     <$> CDyn.dContextWebgl ( Canvas.CanvasConfig canvasEl [] )
 
   let
@@ -165,7 +163,7 @@ eDraw _aTime = do
       pure $ glProgramInit vertShader fragShader
 
   (eInitFailed, eRenderMeh) <-
-    R.fanEither <$> CDyn.drawCanvasFree dInitProg dGLCX eInit
+    R.fanEither <$> CDyn.nextFrameWithCxFree dInitProg dGLCX eInit
 
   dInstructions <- R.holdDyn Gl.noopF ( glDraw arrBuffer <$> eRenderMeh )
 
